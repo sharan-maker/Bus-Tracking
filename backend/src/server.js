@@ -13,7 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 const authRoutes = require('./routes/auth');
+const busRoutes = require('./routes/bus');
 app.use('/api/auth', authRoutes);
+app.use('/api/bus', busRoutes);
 
 // Home route
 app.get('/', (req, res) => {
