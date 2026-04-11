@@ -6,13 +6,18 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// Middleware - MUST be before routes
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Test Route
+// Routes
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
+
+// Home route
 app.get('/', (req, res) => {
-  res.json({ message: 'College Bus Tracking API - Week 1' });
+  res.json({ message: 'College Bus Tracking API - Week 2' });
 });
 
 // Start Server
