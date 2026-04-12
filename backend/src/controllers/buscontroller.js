@@ -83,4 +83,84 @@ exports.searchBuses = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};// Mark bus as unavailable (Admin only)
+exports.markBusUnavailable = async (req, res) => {
+  try {
+    const { bus_id, reason } = req.body;
+
+    const { error } = await supabase
+      .from('buses')
+      .update({ status: 'unavailable' })
+      .eq('bus_id', bus_id);
+
+    if (error) throw new Error(error.message);
+
+    res.json({ message: `Bus ${bus_id} marked as unavailable`, reason });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Set alternate route (Admin only)
+exports.setAlternateRoute = async (req, res) => {
+  try {
+    const { original_route_id, alternate_route_id, reason } = req.body;
+
+    if (!original_route_id || !alternate_route_id) {
+      return res.status(400).json({ error: 'Both route IDs required' });
+    }
+
+    const { data, error } = await supabase
+      .from('alternate_routes')
+      .insert([{ original_route_id, alternate_route_id, reason }])
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    res.status(201).json({ message: 'Alternate route set', alternate: data });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get alternate route
+exports.getAlternateRoute = async (req, res) => {
+  try {
+    const { route_id } = req.params;
+
+    const { data, error } = await supabase
+      .from('alternate_routes')
+      .select('*, routes!alternate_routes_alternate_route_id_fkey(*)')
+      .eq('original_route_id', route_id)
+      .eq('status', 'active')
+      .single();
+
+    if (error || !data) {
+      return res.json({ message: 'No alternate route available' });
+    }
+
+    res.json({ alternate_route: data });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Assign student to bus
+exports.assignStudentToBus = async (req, res) => {
+  try {
+    const { student_id, bus_id, route_id } = req.body;
+
+    const { data, error } = await supabase
+      .from('student_bus')
+      .insert([{ student_id, bus_id, route_id }])
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    res.status(201).json({ message: 'Student assigned to bus', data });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
